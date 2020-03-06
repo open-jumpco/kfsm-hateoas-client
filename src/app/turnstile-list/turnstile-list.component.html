@@ -1,0 +1,26 @@
+<mat-toolbar>
+    <mat-toolbar-row>
+        <h1>Turnstile</h1>
+        <button mat-button (click)="createTurnstile()">New</button>
+    </mat-toolbar-row>
+</mat-toolbar>
+<ng-container *responsive="{orientation:'landscape'}">
+    <mat-grid-list cols="12"
+                   rowHeight="12rem"
+                   gutterSize="1rem"
+                   *ngIf="(turnstiles|async) as turnstileList">
+        <mat-grid-tile colspan="3" *ngFor="let turnstile of turnstileList?.turnstileDataList">
+            <app-turnstile [turnstile]="turnstile"></app-turnstile>
+        </mat-grid-tile>
+    </mat-grid-list>
+</ng-container>
+<ng-container *responsive="{orientation:'portrait'}">
+    <mat-grid-list cols="12"
+                   rowHeight="10rem"
+                   gutterSize="1rem"
+                   *ngIf="(turnstiles|async) as turnstileList">
+        <mat-grid-tile colspan="6" *ngFor="let turnstile of turnstileList?.turnstileDataList">
+            <app-turnstile [turnstile]="turnstile"></app-turnstile>
+        </mat-grid-tile>
+    </mat-grid-list>
+</ng-container>

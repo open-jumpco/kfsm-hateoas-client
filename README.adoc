@@ -1,0 +1,32 @@
+= Angular Material HATEOAS Client for KFSM
+
+== Introduction
+This example is a companion for the link:https://github.com/open-jumpco/kfsm-spring-rest[kfsm-spring-rest] project.
+
+== Prerequisites
+* Install link:https://nodejs.org/en/download/[Node.js]
+* Within the project execute `npm install`
+
+== Usage
+
+=== Run kfsm-spring-rest
+[source,bash]
+----
+cd ../kfsm-spring-rest
+./gradlew bootRun
+----
+
+From another terminal or IDE
+
+[source,bash]
+----
+ng serve
+----
+
+Visit http://localhost:4200/
+
+Client `New` to create turnstile instances.
+
+
+
+
