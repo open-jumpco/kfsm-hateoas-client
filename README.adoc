@@ -4,8 +4,18 @@
 This example is a companion for the link:https://github.com/open-jumpco/kfsm-spring-rest[kfsm-spring-rest] project.
 
 == Prerequisites
+
 * Install link:https://nodejs.org/en/download/[Node.js]
 * Within the project execute `npm install`
+
+=== Gradle Build
+If you don't have node installed using the gradle build will simplify the process.
+
+[source,bash]
+----
+./gradlew nmpInstall
+----
+
 
 == Usage
 
@@ -21,6 +31,13 @@ From another terminal or IDE
 [source,bash]
 ----
 ng serve
+----
+
+OR
+
+[source,bash]
+----
+./gradlew ngServe
 ----
 
 Visit http://localhost:4200/

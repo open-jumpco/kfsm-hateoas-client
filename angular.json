@@ -1,10 +1,10 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
-  "defaultProject": "angular.io-example",
+  "defaultProject": "kfsm-hateoas-client.open.jumpco.io",
   "newProjectRoot": "projects",
   "projects": {
-    "angular.io-example": {
+    "kfsm-hateoas-client.open.jumpco.io": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -63,18 +63,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "angular.io-example:build"
+            "browserTarget": "kfsm-hateoas-client.open.jumpco.io:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "angular.io-example:build:production"
+              "browserTarget": "kfsm-hateoas-client.open.jumpco.io:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "angular.io-example:build"
+            "browserTarget": "kfsm-hateoas-client.open.jumpco.io:build"
           }
         },
         "test": {
@@ -112,11 +112,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "angular.io-example:serve"
+            "devServerTarget": "kfsm-hateoas-client.open.jumpco.io:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "angular.io-example:serve:production"
+              "devServerTarget": "kfsm-hateoas-client.open.jumpco.io:serve:production"
             }
           }
         }

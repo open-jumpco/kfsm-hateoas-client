@@ -1,0 +1,29 @@
+plugins {
+    id "com.github.node-gradle.node" version "2.2.3"
+}
+
+node {
+    version = '12.16.1'
+    download = true
+}
+
+
+task ngBuild(type: NpxTask) {
+    dependsOn npmInstall
+    command = 'ng'
+    args = ['build']
+    inputs.files('package.json', 'package-lock.json', 'angular.json', 'tsconfig.json')
+    inputs.dir('src')
+    inputs.dir(fileTree("node_modules").exclude(".cache"))
+    outputs.dir('dist')
+}
+
+task ngServe(type: NpxTask) {
+    dependsOn npmInstall
+    command = 'ng'
+    args = ['serve']
+    inputs.files('package.json', 'package-lock.json', 'angular.json', 'tsconfig.json')
+    inputs.dir('src')
+    inputs.dir(fileTree("node_modules").exclude(".cache"))
+    outputs.dir('dist')
+}
