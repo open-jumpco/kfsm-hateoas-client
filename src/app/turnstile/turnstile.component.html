@@ -1,14 +1,17 @@
 <mat-card *ngIf="turnstile">
     <mat-card-title aria-label="Id">Turnstile {{turnstile.id}}</mat-card-title>
     <mat-card-subtitle aria-label="State">State: {{turnstile.currentState}}</mat-card-subtitle>
-    <mat-card-content aria-label="Error"
-                      [style]="turnstile.message ? {'color':'blue'}:{'color':'red'}"
-                        >{{errorString|async}}&nbsp;</mat-card-content>
+    <mat-card-content [style]="turnstile.message ? {'color':'blue'}:{'color':'red'}"
+                      aria-label="Error">{{errorString | async}}&nbsp;</mat-card-content>
     <mat-card-actions>
-        <button [disabled]="!turnstile._links['coin']" mat-icon-button aria-label="Coin" (click)="sendEvent('coin')">
+        <button [disabled]="!turnstile._links['coin']"
+                mat-icon-button aria-label="Coin"
+                (click)="sendEvent('coin')">
             <mat-icon>payment</mat-icon>
         </button>
-        <button [disabled]="!turnstile._links['pass']" mat-icon-button aria-label="Pass" (click)="sendEvent('pass')">
+        <button [disabled]="!turnstile._links['pass']"
+                mat-icon-button aria-label="Pass"
+                (click)="sendEvent('pass')">
             <mat-icon>transfer_within_a_station</mat-icon>
         </button>
     </mat-card-actions>
