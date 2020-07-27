@@ -21,7 +21,7 @@
     "rfc6570-expand": "^0.2.0",
     "rxjs": "6.5.4",
     "rxjs-operators": "^1.1.3",
-    "tslib": "^1.10.0",
+    "tslib": "^1.13.0",
     "web-animations-js": "^2.3.2",
     "zone.js": "~0.10.2"
   },
