@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {ApiService, Links, makeLink} from "./api.service";
+import {ApiService, Links, makeLink, Paged} from "./api.service";
 import {Observable} from "rxjs";
 
 enum TurnstileState {
@@ -15,10 +15,10 @@ export interface TurnstileResource extends Links {
 }
 
 export interface TurnstileResources {
-    turnstileDataList: TurnstileResource[];
+    turnstiles: TurnstileResource[];
 }
 
-export interface TurnstileResourceList extends Links {
+export interface TurnstileResourcePage extends Paged {
     _embedded: TurnstileResources;
 }
 
@@ -30,10 +30,11 @@ export class TurnstileApiService {
     constructor(private apiService: ApiService) {
     }
 
-    list(): Observable<TurnstileResourceList> {
-        return new Observable<TurnstileResourceList>(observer => {
-            this.apiService.get<TurnstileResourceList>('list').subscribe(response => {
+    list(): Observable<TurnstileResourcePage> {
+        return new Observable<TurnstileResourcePage>(observer => {
+            this.apiService.get<TurnstileResourcePage>('list').subscribe(response => {
                 observer.next(response);
+                observer.complete();
             }, error => {
                 observer.error(error);
             });
@@ -44,6 +45,7 @@ export class TurnstileApiService {
         return new Observable<TurnstileResource>(observer => {
             this.apiService.post<TurnstileResource, TurnstileResource>('create').subscribe(response => {
                 observer.next(response);
+                observer.complete();
             }, error => {
                 observer.error(error);
             });
@@ -52,8 +54,9 @@ export class TurnstileApiService {
 
     get(turnstile: TurnstileResource): Observable<TurnstileResource> {
         return new Observable<TurnstileResource>(observer => {
-            this.apiService.getLinkName<TurnstileResource>(turnstile,'self').subscribe(response => {
+            this.apiService.getByLinkName<TurnstileResource>(turnstile,'self').subscribe(response => {
                 observer.next(response);
+                observer.complete();
             }, error => {
                 observer.error(error);
             });
@@ -62,8 +65,9 @@ export class TurnstileApiService {
 
     sendEvent(turnstile: TurnstileResource, event: string): Observable<TurnstileResource> {
         return new Observable<TurnstileResource>(observer => {
-            this.apiService.postLinkName<any, TurnstileResource>(turnstile, event).subscribe(response => {
+            this.apiService.postByLinkName<any, TurnstileResource>(turnstile, event).subscribe(response => {
                 observer.next(response);
+                observer.complete();
             }, error => {
                 observer.error(error);
             });

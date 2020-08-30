@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {TurnstileApiService, TurnstileResource} from "app/service/turnstile-api.service";
 import {BehaviorSubject} from "rxjs";
 
@@ -8,8 +8,8 @@ import {BehaviorSubject} from "rxjs";
     styleUrls: ['./turnstile.component.css']
 })
 export class TurnstileComponent implements OnInit {
-    @Input()
-    turnstile: TurnstileResource
+    @Input() turnstile: TurnstileResource
+    @Output() resourceUpdated = new EventEmitter<TurnstileResource>();
 
     errorString = new BehaviorSubject<string>(" ");
 
@@ -22,6 +22,7 @@ export class TurnstileComponent implements OnInit {
     sendEvent(event: string) {
         this.turnstileService.sendEvent(this.turnstile, event).subscribe(response => {
             this.turnstile = response;
+            this.resourceUpdated.emit(response);
             if (this.turnstile.message) {
                 this.errorString.next(this.turnstile.message);
                 const self = this;

@@ -23,12 +23,58 @@ export interface Link {
     templated?: boolean;
 }
 
+export interface PageMetaData {
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    number: number;
+}
+
+export interface Paged extends Links {
+    page: PageMetaData;
+}
+
+export interface PageRequest {
+    sort?: string;
+    size?: number;
+    page?: number;
+}
+
 export interface SystemInfo {
     apiVersion: number;
     apiName: string;
 }
 
 export interface SystemInfoResource extends SystemInfo, Links {
+}
+
+export function convertErrorToString(error: any): string {
+    if (!error) {
+        return 'Unknown';
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+    if (error.error && error.error.message) {
+        return error.error.message;
+    }
+    if (error.status && typeof error.status === 'number') {
+        const status = error.status as number;
+        if (status === 0) {
+            return 'Connection error';
+        }
+        switch (error.status as number) {
+            case 405:
+                return 'Unknown API error';
+        }
+    }
+    if (error.message) {
+        return error.message;
+    }
+    if (error.error) {
+        return error.error;
+    }
+    return error.toString();
 }
 
 
@@ -97,6 +143,7 @@ export class ApiService {
                 const url = makeUrl(makeLink(linksResponse, endpoint), params);
                 // console.debug('url:', url);
                 observer.next(url);
+                observer.complete();
             }, error => {
                 observer.error(error);
             });
@@ -114,6 +161,7 @@ export class ApiService {
                         if (httpResponse.ok) {
                             console.debug('links:ok', httpResponse);
                             observer.next(httpResponse.body);
+                            observer.complete();
                         } else if (response instanceof HttpErrorResponse) {
                             const error = response as HttpErrorResponse;
                             console.error('links:error', error);
@@ -142,31 +190,32 @@ export class ApiService {
         } else {
             return new Observable<SystemInfoResource>(observer => {
                 observer.next(this.systemInfo);
+                observer.complete();
             });
         }
     }
 
-    getLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
-        return this.getLink<R>(makeLink(links, linkName), params, reqOpts);
+    getByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
+        return this.getByLink<R>(makeLink(links, linkName), params, reqOpts);
     }
 
-    deleteLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
-        return this.deleteLink<R>(makeLink(links, linkName), params, reqOpts);
+    deleteByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
+        return this.deleteByLink<R>(makeLink(links, linkName), params, reqOpts);
     }
 
-    putLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return this.putLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
+    putByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+        return this.putByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    postLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return this.postLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
+    postByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+        return this.postByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    patchLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return this.patchLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
+    patchByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+        return this.patchByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    getLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
+    getByLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
         if (link == null) {
             console.log('link is null');
         }
@@ -185,6 +234,7 @@ export class ApiService {
                 if (httpResponse.ok) {
                     console.debug('get:ok', link, httpResponse);
                     observer.next(httpResponse.body);
+                    observer.complete();
                 } else {
                     console.debug('get:error', link, httpResponse);
                     observer.error(httpResponse);
@@ -200,8 +250,9 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.getLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(result => {
+                this.getByLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(result => {
                     observer.next(result);
+                    observer.complete();
                 }, error => {
                     observer.error(error);
                 });
@@ -211,7 +262,7 @@ export class ApiService {
         });
     }
 
-    postLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    postByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
         return new Observable<R>(observer => {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
@@ -225,8 +276,9 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.postLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(result => {
+                this.postByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(result => {
                     observer.next((result as R));
+                    observer.complete();
                 }, error => {
                     observer.error(error);
                 });
@@ -236,7 +288,7 @@ export class ApiService {
         });
     }
 
-    putLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    putByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
         return new Observable<R>(observer => {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
@@ -249,8 +301,9 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.putLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
+                this.putByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
                     observer.next(response);
+                    observer.complete();
                 }, error => {
                     observer.error(error);
                 });
@@ -260,7 +313,7 @@ export class ApiService {
         });
     }
 
-    deleteLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
+    deleteByLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
         return new Observable<R>(observer => {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
@@ -273,8 +326,9 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.deleteLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(response => {
+                this.deleteByLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(response => {
                     observer.next(response);
+                    observer.complete();
                 }, error => {
                     observer.error(error);
                 });
@@ -284,7 +338,7 @@ export class ApiService {
         });
     }
 
-    patchLink<T, R>(link: Link, body: T, params ?: any, reqOpts ?: any): Observable<R> {
+    patchByLink<T, R>(link: Link, body: T, params ?: any, reqOpts ?: any): Observable<R> {
         return new Observable<R>(observer => {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
@@ -297,8 +351,9 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.patchLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
+                this.patchByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
                     observer.next(response);
+                    observer.complete();
                 }, error => {
                     observer.error(error);
                 });
@@ -313,4 +368,27 @@ export class ApiService {
         return this.http.request<T>(request);
     }
 
+    self<T extends Links>(links: T): Observable<T> {
+        return this.getByLinkName<T>(links, 'self');
+    }
+
+    selfPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+        return this.getByLinkName<T>(page, 'self', request);
+    }
+
+    firstPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+        return this.getByLinkName<T>(page, 'first', request);
+    }
+
+    lastPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+        return this.getByLinkName<T>(page, 'last', request);
+    }
+
+    nextPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+        return this.getByLinkName<T>(page, 'next', request);
+    }
+
+    prevPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+        return this.getByLinkName<T>(page, 'prev', request);
+    }
 }
