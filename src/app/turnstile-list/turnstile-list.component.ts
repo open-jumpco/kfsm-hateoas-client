@@ -42,7 +42,7 @@ export class TurnstileListComponent implements OnInit {
     async listTurnstiles() {
         try {
             this.errorMessage.next(null);
-            this.turnstilePage = await this.turnstileService.list().toPromise();
+            this.turnstilePage = await this.turnstileService.list({size: this.pageSize}).toPromise();
             this.totalPages = this.turnstilePage?.page?.totalPages;
             this.turnstiles.next(this.turnstilePage?._embedded);
         } catch (error) {

@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {ApiService, Links, makeLink, Paged} from "./api.service";
+import {ApiService, Links, makeLink, Paged, PageRequest} from "./api.service";
 import {Observable} from "rxjs";
 
 enum TurnstileState {
@@ -30,8 +30,8 @@ export class TurnstileApiService {
     constructor(private apiService: ApiService) {
     }
 
-    list(): Observable<TurnstileResourcePage> {
-        return this.apiService.get<TurnstileResourcePage>('list');
+    list(pageRequest: PageRequest): Observable<TurnstileResourcePage> {
+        return this.apiService.get<TurnstileResourcePage>('list', pageRequest);
     }
 
     create(): Observable<TurnstileResource> {

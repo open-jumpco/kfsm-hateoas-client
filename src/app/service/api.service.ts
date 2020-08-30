@@ -55,7 +55,13 @@ export function convertErrorToString(error: any): string {
     if (typeof error === 'string') {
         return error;
     }
-    if (error.error && error.error.message) {
+    if (error?.error?.detail) {
+        return error.error.detail;
+    }
+    if (error?.error?.title) {
+        return error.error.title;
+    }
+    if (error?.error?.message) {
         return error.error.message;
     }
     if (error.status && typeof error.status === 'number') {
@@ -100,8 +106,6 @@ function addObserve(reqOpts?: any): any {
 
 
 export function makeLink(links: Links, linkName: string): Link {
-    // tslint:disable-next-line:no-console
-    // console.debug('makeLink2', links, linkName);
     if (links._links) {
         return expectNotNullFn(links._links[linkName], () => `Expected ${linkName} from ${links}`);
     } else {
@@ -110,14 +114,28 @@ export function makeLink(links: Links, linkName: string): Link {
 }
 
 export function makeUrl(link: Link, params?: any): string {
+    let result = link.href;
     if (link.templated) {
         preconditionFn(params != null, () => `params required for ${link.href}`);
         const {expand} = init(link.href);
         const url = expand(params);
         console.debug(`makeUrl:${link.href}`, params);
-        return url;
+        result = url;
     }
-    return link.href;
+    if (params != null) {
+        const url = new URL(result);
+        for (const param of Object.keys(params)) {
+            const value = params[param];
+            if (value !== null && value !== undefined) {
+                if (!url.searchParams.has(param) && !link.href.includes('{' + param + '}')) {
+                    console.debug('makeUrl:add:', param, '=', value);
+                    url.searchParams.append(param, value);
+                }
+            }
+        }
+        result = url.toString();
+    }
+    return result;
 }
 
 
