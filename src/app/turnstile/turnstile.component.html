@@ -14,5 +14,10 @@
                 (click)="sendEvent('pass')">
             <mat-icon>transfer_within_a_station</mat-icon>
         </button>
+        <button [disabled]="!turnstile._links['delete']"
+                mat-icon-button aria-label="Delete"
+                (click)="delete()">
+            <mat-icon>delete</mat-icon>
+        </button>
     </mat-card-actions>
 </mat-card>

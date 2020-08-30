@@ -51,15 +51,23 @@ export class TurnstileListComponent implements OnInit {
         return this.listTurnstiles();
     }
 
-    updateTurnstile(resource: TurnstileResource) {
+    async updateTurnstile(resource: TurnstileResource) {
         console.debug('updateTurnstile', resource);
+        if(resource == null) {
+            return this.listTurnstiles();
+        }
+        let found = false;
         for (const item of this.turnstiles.getValue().turnstiles) {
             if (item.id === resource.id) {
                 item.currentState = resource.currentState;
                 item.locked = resource.locked;
                 item.message = resource.message;
                 item._links = resource._links;
+                found = true;
             }
+        }
+        if (!found) {
+            return this.listTurnstiles();
         }
     }
 

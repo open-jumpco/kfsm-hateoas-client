@@ -1,10 +1,12 @@
 <mat-toolbar>
     <mat-toolbar-row>
         <h1>Turnstile</h1>
-        <button mat-button (click)="createTurnstile()">New</button>
-        <h3 *ngIf="errorMessage | async as message" style="color: darkred">{{message}}</h3>
+        <h3 style="color: darkred">{{errorMessage | async}}</h3>
         <span class="spacer"></span>
         <app-pager *ngIf="turnstilePage?.page?.totalPages > 1" [pagedResource]="turnstilePage" (pageUpdated)="pageUpdated($event)"></app-pager>
+        <button mat-button (click)="createTurnstile()">
+            <mat-icon>add_circle</mat-icon>
+        </button>
     </mat-toolbar-row>
 </mat-toolbar>
 <ng-container *responsive="{orientation:'landscape'}">

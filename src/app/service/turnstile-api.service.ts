@@ -31,46 +31,22 @@ export class TurnstileApiService {
     }
 
     list(): Observable<TurnstileResourcePage> {
-        return new Observable<TurnstileResourcePage>(observer => {
-            this.apiService.get<TurnstileResourcePage>('list').subscribe(response => {
-                observer.next(response);
-                observer.complete();
-            }, error => {
-                observer.error(error);
-            });
-        });
+        return this.apiService.get<TurnstileResourcePage>('list');
     }
 
     create(): Observable<TurnstileResource> {
-        return new Observable<TurnstileResource>(observer => {
-            this.apiService.post<TurnstileResource, TurnstileResource>('create').subscribe(response => {
-                observer.next(response);
-                observer.complete();
-            }, error => {
-                observer.error(error);
-            });
-        });
+        return this.apiService.post<TurnstileResource, TurnstileResource>('create');
     }
 
     get(turnstile: TurnstileResource): Observable<TurnstileResource> {
-        return new Observable<TurnstileResource>(observer => {
-            this.apiService.getByLinkName<TurnstileResource>(turnstile,'self').subscribe(response => {
-                observer.next(response);
-                observer.complete();
-            }, error => {
-                observer.error(error);
-            });
-        });
+        return this.apiService.getByLinkName<TurnstileResource>(turnstile, 'self');
     }
 
     sendEvent(turnstile: TurnstileResource, event: string): Observable<TurnstileResource> {
-        return new Observable<TurnstileResource>(observer => {
-            this.apiService.postByLinkName<any, TurnstileResource>(turnstile, event).subscribe(response => {
-                observer.next(response);
-                observer.complete();
-            }, error => {
-                observer.error(error);
-            });
-        });
+        return this.apiService.postByLinkName<any, TurnstileResource>(turnstile, event);
+    }
+
+    delete(turnstile: TurnstileResource): Observable<void> {
+        return this.apiService.deleteByLinkName(turnstile, 'delete');
     }
 }
