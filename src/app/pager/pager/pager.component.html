@@ -1,0 +1,3 @@
+<mat-paginator [length]="pagedResource.page.totalElements"
+               [pageSize]="size"
+               [pageSizeOptions]="pageSizes" (page)="pageEvent($event)"></mat-paginator>
