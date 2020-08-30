@@ -16,11 +16,23 @@ import {convertErrorToString, Paged} from "app/service/api.service";
 export class TurnstileListComponent implements OnInit {
     turnstiles = new BehaviorSubject<TurnstileResources>(null);
     turnstilePage: TurnstileResourcePage;
-    totalPages: number
+    totalPages: number;
+    pageSize: number;
     errorMessage = new BehaviorSubject<string>(null);
 
     constructor(private turnstileService: TurnstileApiService) {
         this.totalPages = 0;
+        switch (window.screen.orientation.type) {
+            case "portrait-primary":
+            case "portrait-secondary":
+                this.pageSize = 6;
+                break;
+            case "landscape-primary":
+            case "landscape-secondary":
+            default:
+                this.pageSize = 10;
+                break;
+        }
     }
 
     async ngOnInit() {

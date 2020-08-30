@@ -195,6 +195,34 @@ export class ApiService {
         }
     }
 
+    private processEvent<R>(request: Observable<HttpEvent<R>>, link: Link, observer: Subscriber<R>) {
+        request.subscribe(response => {
+            if (response instanceof HttpResponse) {
+                const httpResponse = response as HttpResponse<R>;
+                if (httpResponse.ok) {
+                    console.debug('process:ok', link, httpResponse);
+                    observer.next(httpResponse.body);
+                    observer.complete();
+                } else {
+                    console.debug('process:response:error:', link, httpResponse);
+                    observer.error(httpResponse);
+                }
+            }
+        }, error => {
+            console.error('process:error', link, error);
+            observer.error(error);
+        });
+    }
+
+    private process<R>(observer: Subscriber<R>, observable: Observable<R>) {
+        observable.subscribe(result => {
+            observer.next(result);
+            observer.complete();
+        }, error => {
+            observer.error(error);
+        });
+    }
+
     getByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
         return this.getByLink<R>(makeLink(links, linkName), params, reqOpts);
     }
@@ -223,26 +251,7 @@ export class ApiService {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
             console.debug('get:url', link, url, opts);
-            this.process(this.http.get<R>(url, opts), link, observer);
-        });
-    }
-
-    private process<R>(request: Observable<HttpEvent<R>>, link: Link, observer: Subscriber<R>) {
-        request.subscribe(response => {
-            if (response instanceof HttpResponse) {
-                const httpResponse = response as HttpResponse<R>;
-                if (httpResponse.ok) {
-                    console.debug('get:ok', link, httpResponse);
-                    observer.next(httpResponse.body);
-                    observer.complete();
-                } else {
-                    console.debug('get:error', link, httpResponse);
-                    observer.error(httpResponse);
-                }
-            }
-        }, error => {
-            console.error('getLink:error', link, error);
-            observer.error(error);
+            this.processEvent(this.http.get<R>(url, opts), link, observer);
         });
     }
 
@@ -250,12 +259,7 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.getByLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(result => {
-                    observer.next(result);
-                    observer.complete();
-                }, error => {
-                    observer.error(error);
-                });
+                this.process(observer, this.getByLinkName<R>(linksResponse, endpoint, params, reqOpts));
             }, error => {
                 observer.error(error);
             });
@@ -267,7 +271,7 @@ export class ApiService {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
             console.debug('post:url', link, url, body, params, opts);
-            this.process(this.http.post<R>(url, body, opts), link, observer);
+            this.processEvent(this.http.post<R>(url, body, opts), link, observer);
         });
     }
 
@@ -276,12 +280,7 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.postByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(result => {
-                    observer.next((result as R));
-                    observer.complete();
-                }, error => {
-                    observer.error(error);
-                });
+                this.process(observer, this.postByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
             }, error => {
                 observer.error(error);
             });
@@ -293,7 +292,7 @@ export class ApiService {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
             console.debug(`put:url=${url}`, link, opts);
-            this.process(this.http.put<R>(url, body, opts), link, observer);
+            this.processEvent(this.http.put<R>(url, body, opts), link, observer);
         });
     }
 
@@ -301,12 +300,7 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.putByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
-                    observer.next(response);
-                    observer.complete();
-                }, error => {
-                    observer.error(error);
-                });
+                this.process(observer, this.putByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
             }, error => {
                 observer.error(error);
             });
@@ -318,7 +312,7 @@ export class ApiService {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
             console.debug(`delete:url=${url}`, link, opts);
-            this.process(this.http.delete<R>(url, opts), link, observer);
+            this.processEvent(this.http.delete<R>(url, opts), link, observer);
         });
     }
 
@@ -326,12 +320,7 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.deleteByLinkName<R>(linksResponse, endpoint, params, reqOpts).subscribe(response => {
-                    observer.next(response);
-                    observer.complete();
-                }, error => {
-                    observer.error(error);
-                });
+                this.process(observer, this.deleteByLinkName<R>(linksResponse, endpoint, params, reqOpts));
             }, error => {
                 observer.error(error);
             });
@@ -343,7 +332,7 @@ export class ApiService {
             const url = makeUrl(link, params);
             const opts = addObserve(reqOpts);
             console.debug(`patch:url=${url}`, link, opts);
-            this.process(this.http.patch<R>(url, body, opts), link, observer);
+            this.processEvent(this.http.patch<R>(url, body, opts), link, observer);
         });
     }
 
@@ -351,12 +340,7 @@ export class ApiService {
         return new Observable<R>(observer => {
             this.links().subscribe(linksResponse => {
                 console.debug('links', linksResponse);
-                this.patchByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts).subscribe(response => {
-                    observer.next(response);
-                    observer.complete();
-                }, error => {
-                    observer.error(error);
-                });
+                this.process(observer, this.patchByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
             }, error => {
                 observer.error(error);
             });

@@ -1,0 +1,51 @@
+@startuml
+
+interface TurnstileResourcePage
+interface TurnstileResource
+
+class TurnstileListComponent {
+    turnstiles: BehaviorSubject<TurnstileResources>
+    totalPages: number
+    errorMessage: BehaviorSubject<string>
+    async listTurnstiles()
+    async createTurnstile()
+    async updateTurnstile(resource: TurnstileResource)
+    pageUpdated(event: Paged)
+}
+TurnstileListComponent -left- TurnstileResourcePage: turnstilePage
+
+class TurnstileComponent {
+    resourceUpdated: EventEmitter<TurnstileResource>: <<output>>
+    errorString: BehaviorSubject<string>
+    async sendEvent(event: string)
+    async delete()
+}
+TurnstileComponent -right- TurnstileResource: turnstile <<input>>
+TurnstileListComponent <..right..> TurnstileComponent: <<create, event>>
+TurnstileListComponent --> TurnstileService: turnstileService
+TurnstileComponent -down--> TurnstileService: turnstileService
+
+class ApiService
+class TurnstileService
+TurnstileService --left--|> ApiService
+
+class PagerComponent {
+    pagedResource: Paged: <<input>>
+    sort: string: <<input>>
+    size: number: <<input>>
+    pageUpdated: EventEmitter<Paged>: <<output>>
+    sortOptions: string[] <<input>>
+    pageSizes: number[]: <<input>>
+
+    async reload(pageRequest: PageRequest)
+    async first()
+    async next()
+    async prev()
+    async last()
+    async pageEvent(event: PageEvent): <<handler>>
+}
+
+TurnstileListComponent <.down..> PagerComponent: <<create, event>>
+PagerComponent -right-> ApiService: apiService
+
+@enduml
