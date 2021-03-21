@@ -1,6 +1,7 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {TurnstileApiService, TurnstileResource} from "app/service/turnstile-api.service";
 import {BehaviorSubject} from "rxjs";
+import {convertErrorToString} from "app/service/api.service";
 
 @Component({
     selector: 'app-turnstile',
@@ -8,8 +9,8 @@ import {BehaviorSubject} from "rxjs";
     styleUrls: ['./turnstile.component.css']
 })
 export class TurnstileComponent implements OnInit {
-    @Input()
-    turnstile: TurnstileResource
+    @Input() turnstile: TurnstileResource
+    @Output() resourceUpdated = new EventEmitter<TurnstileResource>();
 
     errorString = new BehaviorSubject<string>(" ");
 
@@ -19,9 +20,10 @@ export class TurnstileComponent implements OnInit {
     ngOnInit() {
     }
 
-    sendEvent(event: string) {
-        this.turnstileService.sendEvent(this.turnstile, event).subscribe(response => {
-            this.turnstile = response;
+    async sendEvent(event: string) {
+        try {
+            this.turnstile = await this.turnstileService.sendEvent(this.turnstile, event).toPromise();
+            this.resourceUpdated.emit(this.turnstile);
             if (this.turnstile.message) {
                 this.errorString.next(this.turnstile.message);
                 const self = this;
@@ -31,16 +33,18 @@ export class TurnstileComponent implements OnInit {
             } else {
                 this.errorString.next(" ");
             }
-        }, error => {
-            if (error.error) {
-                this.errorString = error.error;
-            } else {
-                this.errorString = error;
-            }
+        } catch (error) {
+            console.error('sendEvent:', event, error);
+            this.errorString.next(convertErrorToString(error));
             const self = this;
             setTimeout(function () {
                 self.errorString.next(" ")
             }, 5000);
-        });
+        }
+    }
+
+    async delete() {
+        await this.turnstileService.delete(this.turnstile).toPromise();
+        this.resourceUpdated.emit(null);
     }
 }

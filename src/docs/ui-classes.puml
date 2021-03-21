@@ -1,0 +1,53 @@
+@startuml
+
+interface Links {
+}
+
+
+interface Paged {
+}
+
+Paged -left-|> Links
+
+interface PageRequest {
+    sort: string;
+    size: number;
+    page: number;
+}
+
+interface Observable<T>
+enum TurnstileState {
+    LOCKED
+    UNLOCKED
+}
+interface TurnstileResource {
+    id: number
+    locked: boolean
+    message: string
+}
+
+TurnstileResource -left- TurnstileState: currentState
+
+interface TurnstileResourcePage
+TurnstileResource --|> Links
+TurnstileResourcePage -down-|> Paged
+
+TurnstileResourcePage -left- TurnstileResource: turnstiles
+
+class ApiService {
+}
+class TurnstileApiService {
+    list(): Observable<TurnstileResourcePage>
+    create(): Observable<TurnstileResource>
+    get(turnstile: TurnstileResource): Observable<TurnstileResource>
+    sendEvent(turnstile: TurnstileResource, event: string): Observable<TurnstileResource>
+    delete(turnstile: TurnstileResource): Observable<void>
+}
+
+ApiService <|-left- TurnstileApiService
+TurnstileApiService .left. Observable: <<return>>
+TurnstileApiService .. TurnstileResource: <<parameter,return>>
+TurnstileApiService .. TurnstileResourcePage: <<return>>
+ApiService .right. PageRequest: <<parameter>>
+
+@enduml

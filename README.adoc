@@ -42,7 +42,22 @@ OR
 
 Visit http://localhost:4200/
 
-Client `New` to create turnstile instances.
+Click the `+` to create turnstile instances.
+
+== Design
+
+=== API Classes
+
+image::api_classes.png[]
+
+=== Service Classes
+
+image::ui_classes.png[]
+
+=== Page Components
+
+image::page_components.png[]
+
 
 
 
