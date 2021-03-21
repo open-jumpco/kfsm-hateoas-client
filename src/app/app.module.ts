@@ -13,29 +13,33 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {BasicHttpInterceptor} from "app/basic-http-interceptor.service";
 import {MatGridListModule} from "@angular/material/grid-list";
-import { ResponsiveModule } from 'ngx-responsive'
+import { ResponsiveModule } from 'ngx-responsive';
+import { PagerComponent } from './pager/pager/pager.component'
+import {MatPaginatorModule} from "@angular/material/paginator";
 
 @NgModule({
-  imports: [
-    BrowserModule,
-    ReactiveFormsModule,
-    RouterModule.forRoot([
-      {path: '', component: TurnstileComponent},
-    ]),
-    BrowserAnimationsModule,
-    MatCardModule,
-    MatIconModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatToolbarModule,
-    MatGridListModule,
-    ResponsiveModule.forRoot()
-  ],
+    imports: [
+        BrowserModule,
+        ReactiveFormsModule,
+        RouterModule.forRoot([
+            {path: '', component: TurnstileComponent},
+        ]),
+        BrowserAnimationsModule,
+        MatCardModule,
+        MatIconModule,
+        HttpClientModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatToolbarModule,
+        MatGridListModule,
+        ResponsiveModule.forRoot(),
+        MatPaginatorModule
+    ],
   declarations: [
     AppComponent,
     TurnstileComponent,
-    TurnstileListComponent
+    TurnstileListComponent,
+    PagerComponent
   ],
   bootstrap: [ AppComponent ],
   providers: [

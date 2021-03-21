@@ -1,0 +1,68 @@
+@startuml
+
+interface Link {
+    href: string;
+    templated: boolean;
+}
+
+interface Links {
+    _links: Map<string, Link>
+}
+
+Links -- Link: _links <<map>>
+
+interface PageMetaData {
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    number: number;
+}
+
+interface Paged {
+    page: PageMetaData;
+}
+
+Paged --|> Links
+Paged .left. PageMetaData
+
+interface PageRequest {
+    sort: string;
+    size: number;
+    page: number;
+}
+
+interface SystemInfo {
+    apiVersion: number;
+    apiName: string;
+}
+
+interface SystemInfoResource {
+}
+
+SystemInfoResource --|>  SystemInfo
+SystemInfoResource --left--|>  Links
+
+interface Observable<T>
+
+class ApiService {
+    get<R>(endpoint: string, params: any, reqOpts: any): Observable<R>
+    getByLinkName<R>(links: Links, linkName: string, params: any, reqOpts: any): Observable<R>
+    getByLink<R>(link: Link, params: any, reqOpts: any): Observable<R>
+    post<T, R>(endpoint: string, body: T, params: any, reqOpts: any): Observable<R>
+    postByLinkName<T, R>(links: Links, linkName: string, body: T, params: any, reqOpts: any): Observable<R>
+    postByLink<T, R>(link: Link, body: T, params: any, reqOpts: any): Observable<R>
+    request<T, R>(request: HttpRequest<T>): Observable<HttpEvent<R>>
+    self<T extends Links>(links: T): Observable<T>
+    selfPage<T extends Paged>(page: T, request?: PageRequest): Observable<T>
+    firstPage<T extends Paged>(page: T, request?: PageRequest): Observable<T>
+    lastPage<T extends Paged>(page: T, request?: PageRequest): Observable<T>
+    nextPage<T extends Paged>(page: T, request?: PageRequest): Observable<T>
+    prevPage<T extends Paged>(page: T, request?: PageRequest): Observable<T>
+}
+
+ApiService .right. Observable
+ApiService .down.. PageRequest: <<parameter>>
+ApiService .. Links: <<parameter>>
+ApiService .left. Paged: <<parameter>>
+
+@enduml

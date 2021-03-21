@@ -1,16 +1,21 @@
-<mat-toolbar>
+<mat-toolbar color="accent">
     <mat-toolbar-row>
         <h1>Turnstile</h1>
-        <button mat-button (click)="createTurnstile()">New</button>
+        <h3 class="mat-warn">{{errorMessage | async}}</h3>
+        <span class="spacer"></span>
+        <app-pager *ngIf="turnstilePage?.page?.totalPages > 1" [size]="pageSize" [pagedResource]="turnstilePage" (pageUpdated)="pageUpdated($event)"></app-pager>
+        <button mat-button (click)="createTurnstile()">
+            <mat-icon>add_circle</mat-icon>
+        </button>
     </mat-toolbar-row>
 </mat-toolbar>
 <ng-container *responsive="{orientation:'landscape'}">
     <mat-grid-list cols="12"
                    rowHeight="12rem"
                    gutterSize="1rem"
-                   *ngIf="(turnstiles|async) as turnstileList">
-        <mat-grid-tile colspan="3" *ngFor="let turnstile of turnstileList?.turnstileDataList">
-            <app-turnstile [turnstile]="turnstile"></app-turnstile>
+                   *ngIf="(turnstiles | async) as turnstileList">
+        <mat-grid-tile colspan="3" *ngFor="let turnstile of turnstileList?.turnstiles">
+            <app-turnstile [turnstile]="turnstile" (resourceUpdated)="updateTurnstile($event)"></app-turnstile>
         </mat-grid-tile>
     </mat-grid-list>
 </ng-container>
@@ -18,9 +23,9 @@
     <mat-grid-list cols="12"
                    rowHeight="10rem"
                    gutterSize="1rem"
-                   *ngIf="(turnstiles|async) as turnstileList">
-        <mat-grid-tile colspan="6" *ngFor="let turnstile of turnstileList?.turnstileDataList">
-            <app-turnstile [turnstile]="turnstile"></app-turnstile>
+                   *ngIf="(turnstiles | async) as turnstileList">
+        <mat-grid-tile colspan="6" *ngFor="let turnstile of turnstileList?.turnstiles">
+            <app-turnstile [turnstile]="turnstile" (resourceUpdated)="updateTurnstile($event)"></app-turnstile>
         </mat-grid-tile>
     </mat-grid-list>
 </ng-container>
