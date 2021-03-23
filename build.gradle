@@ -27,3 +27,6 @@ task ngServe(type: NpxTask) {
     inputs.dir(fileTree("node_modules").exclude(".cache"))
     outputs.dir('dist')
 }
+
+npmInstall.inputs.files('package.json')
+npmInstall.outputs.dir('node_modules')
