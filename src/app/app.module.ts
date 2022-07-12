@@ -13,7 +13,6 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {BasicHttpInterceptor} from "app/basic-http-interceptor.service";
 import {MatGridListModule} from "@angular/material/grid-list";
-import { ResponsiveModule } from 'ngx-responsive';
 import { PagerComponent } from './pager/pager/pager.component'
 import {MatPaginatorModule} from "@angular/material/paginator";
 
@@ -32,7 +31,6 @@ import {MatPaginatorModule} from "@angular/material/paginator";
         MatButtonModule,
         MatToolbarModule,
         MatGridListModule,
-        ResponsiveModule.forRoot(),
         MatPaginatorModule
     ],
   declarations: [
