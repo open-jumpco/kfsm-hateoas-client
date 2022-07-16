@@ -1,3 +1,4 @@
+/.angular/cache
 # Ignore Gradle project-specific cache directory
 .gradle/
 .idea/
