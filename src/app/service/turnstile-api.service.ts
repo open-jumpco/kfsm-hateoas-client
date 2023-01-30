@@ -30,23 +30,23 @@ export class TurnstileApiService {
     constructor(private apiService: ApiService) {
     }
 
-    list(pageRequest: PageRequest): Observable<TurnstileResourcePage> {
+    list(pageRequest: PageRequest): Promise<TurnstileResourcePage> {
         return this.apiService.get<TurnstileResourcePage>('list', pageRequest);
     }
 
-    create(): Observable<TurnstileResource> {
+    create(): Promise<TurnstileResource> {
         return this.apiService.post<TurnstileResource, TurnstileResource>('create');
     }
 
-    get(turnstile: TurnstileResource): Observable<TurnstileResource> {
+    get(turnstile: TurnstileResource): Promise<TurnstileResource> {
         return this.apiService.getByLinkName<TurnstileResource>(turnstile, 'self');
     }
 
-    sendEvent(turnstile: TurnstileResource, event: string): Observable<TurnstileResource> {
+    sendEvent(turnstile: TurnstileResource, event: string): Promise<TurnstileResource> {
         return this.apiService.postByLinkName<any, TurnstileResource>(turnstile, event);
     }
 
-    delete(turnstile: TurnstileResource): Observable<void> {
+    delete(turnstile: TurnstileResource): Promise<void> {
         return this.apiService.deleteByLinkName(turnstile, 'delete');
     }
 }

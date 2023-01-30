@@ -9,7 +9,7 @@
         </button>
     </mat-toolbar-row>
 </mat-toolbar>
-<ng-container *responsive="{orientation:'landscape'}">
+<ng-container *ngIf="!(portrait | async)">
     <mat-grid-list cols="12"
                    rowHeight="12rem"
                    gutterSize="1rem"
@@ -19,7 +19,7 @@
         </mat-grid-tile>
     </mat-grid-list>
 </ng-container>
-<ng-container *responsive="{orientation:'portrait'}">
+<ng-container *ngIf="portrait | async">
     <mat-grid-list cols="12"
                    rowHeight="10rem"
                    gutterSize="1rem"

@@ -6,7 +6,8 @@ import {
     TurnstileResources
 } from "app/service/turnstile-api.service";
 import {BehaviorSubject} from "rxjs";
-import {convertErrorToString, Paged} from "app/service/api.service";
+import {asPromise, convertErrorToString, Paged} from "app/service/api.service";
+import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 
 @Component({
     selector: 'app-turnstile-list',
@@ -19,8 +20,8 @@ export class TurnstileListComponent implements OnInit {
     totalPages: number;
     pageSize: number;
     errorMessage = new BehaviorSubject<string>(null);
-
-    constructor(private turnstileService: TurnstileApiService) {
+    portrait: Promise<boolean>;
+    constructor(private turnstileService: TurnstileApiService, breakpointObserver: BreakpointObserver) {
         this.totalPages = 0;
         switch (window.screen.orientation.type) {
             case "portrait-primary":
@@ -33,7 +34,23 @@ export class TurnstileListComponent implements OnInit {
                 this.pageSize = 10;
                 break;
         }
+        this.portrait = new Promise(resolve => {
+            breakpointObserver.observe([
+                Breakpoints.HandsetLandscape,
+                Breakpoints.WebLandscape,
+                Breakpoints.TabletLandscape
+            ]).subscribe(result => {
+                if (result.matches) {
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            });
+        });
     }
+
+
+
 
     async ngOnInit() {
         await this.listTurnstiles();
@@ -42,7 +59,7 @@ export class TurnstileListComponent implements OnInit {
     async listTurnstiles() {
         try {
             this.errorMessage.next(null);
-            this.turnstilePage = await this.turnstileService.list({size: this.pageSize}).toPromise();
+            this.turnstilePage = await this.turnstileService.list({size: this.pageSize});
             this.totalPages = this.turnstilePage?.page?.totalPages;
             this.turnstiles.next(this.turnstilePage?._embedded);
         } catch (error) {
@@ -55,7 +72,7 @@ export class TurnstileListComponent implements OnInit {
         console.debug('createTurnstile');
         try {
             this.errorMessage.next(null);
-            const created = await this.turnstileService.create().toPromise();
+            const created = await this.turnstileService.create();
         } catch (error) {
             console.debug('createTurnstile:error:', error);
             this.errorMessage.next(convertErrorToString(error));

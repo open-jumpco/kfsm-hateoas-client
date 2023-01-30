@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {ApiService, Paged, PageRequest} from "app/service/api.service";
+import {ApiService, asPromise, Paged, PageRequest} from "app/service/api.service";
 import {PageEvent} from "@angular/material/paginator";
 
 @Component({
@@ -28,7 +28,7 @@ export class PagerComponent implements OnInit {
     }
 
     async reload(pageRequest: PageRequest) {
-        this.pagedResource = await this.apiService.selfPage(this.pagedResource, pageRequest).toPromise();
+        this.pagedResource = await this.apiService.selfPage(this.pagedResource, pageRequest);
         this.size = this.pagedResource.page.size;
         this.pageUpdated.emit(this.pagedResource);
     }
@@ -41,25 +41,25 @@ export class PagerComponent implements OnInit {
     }
 
     async first() {
-        this.pagedResource = await this.apiService.firstPage(this.pagedResource, this.getPageable()).toPromise();
+        this.pagedResource = await this.apiService.firstPage(this.pagedResource, this.getPageable());
         this.size = this.pagedResource.page.size;
         this.pageUpdated.emit(this.pagedResource);
     }
 
     async next() {
-        this.pagedResource = await this.apiService.nextPage(this.pagedResource, this.getPageable()).toPromise();
+        this.pagedResource = await this.apiService.nextPage(this.pagedResource, this.getPageable());
         this.size = this.pagedResource.page.size;
         this.pageUpdated.emit(this.pagedResource);
     }
 
     async prev() {
-        this.pagedResource = await this.apiService.prevPage(this.pagedResource, this.getPageable()).toPromise();
+        this.pagedResource = await this.apiService.prevPage(this.pagedResource, this.getPageable());
         this.size = this.pagedResource.page.size;
         this.pageUpdated.emit(this.pagedResource);
     }
 
     async last() {
-        this.pagedResource = await this.apiService.lastPage(this.pagedResource, this.getPageable()).toPromise();
+        this.pagedResource = await this.apiService.lastPage(this.pagedResource, this.getPageable());
         this.size = this.pagedResource.page.size;
         this.pageUpdated.emit(this.pagedResource);
     }

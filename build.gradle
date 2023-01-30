@@ -3,7 +3,7 @@ plugins {
 }
 
 node {
-    version = '12.16.1'
+    version = '18.12.1'
     download = true
 }
 
@@ -30,3 +30,7 @@ task ngServe(type: NpxTask) {
 
 npmInstall.inputs.files('package.json')
 npmInstall.outputs.dir('node_modules')
+
+task clean(type: Delete) {
+    delete 'dist'
+}

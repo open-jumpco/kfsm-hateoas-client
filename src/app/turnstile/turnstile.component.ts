@@ -22,7 +22,7 @@ export class TurnstileComponent implements OnInit {
 
     async sendEvent(event: string) {
         try {
-            this.turnstile = await this.turnstileService.sendEvent(this.turnstile, event).toPromise();
+            this.turnstile = await this.turnstileService.sendEvent(this.turnstile, event);
             this.resourceUpdated.emit(this.turnstile);
             if (this.turnstile.message) {
                 this.errorString.next(this.turnstile.message);
@@ -44,7 +44,7 @@ export class TurnstileComponent implements OnInit {
     }
 
     async delete() {
-        await this.turnstileService.delete(this.turnstile).toPromise();
+        await this.turnstileService.delete(this.turnstile);
         this.resourceUpdated.emit(null);
     }
 }

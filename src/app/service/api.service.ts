@@ -9,7 +9,7 @@ import {
 } from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable, Subscriber} from 'rxjs';
-import {init} from 'rfc6570-expand';
+import {parseTemplate} from 'url-template';
 import {environment} from 'app/../environments/environment';
 import {expectNotNullFn, preconditionFn} from 'app/utils/errors.util';
 
@@ -117,8 +117,8 @@ export function makeUrl(link: Link, params?: any): string {
     let result = link.href;
     if (link.templated) {
         preconditionFn(params != null, () => `params required for ${link.href}`);
-        const {expand} = init(link.href);
-        const url = expand(params);
+        const template = parseTemplate(link.href);
+        const url = template.expand(params);
         console.debug(`makeUrl:${link.href}`, params);
         result = url;
     }
@@ -138,6 +138,15 @@ export function makeUrl(link: Link, params?: any): string {
     return result;
 }
 
+export function asPromise<T>(observable: Observable<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        observable.subscribe({
+            next: (data) => resolve(data),
+            error: (err) => reject(err)
+        });
+    });
+}
+
 
 @Injectable({
     providedIn: 'root'
@@ -155,242 +164,176 @@ export class ApiService {
      * @param endpoint
      * @param params
      */
-    url(endpoint: string, params?: any): Observable<string> {
-        return new Observable<string>(observer => {
-            this.links().subscribe(linksResponse => {
-                const url = makeUrl(makeLink(linksResponse, endpoint), params);
-                // console.debug('url:', url);
-                observer.next(url);
-                observer.complete();
-            }, error => {
-                observer.error(error);
-            });
-        });
+    async url(endpoint: string, params?: any): Promise<string> {
+        const linksResponse = await this.links();
+        return makeUrl(makeLink(linksResponse, endpoint), params);
     }
 
-    private links(): Observable<SystemInfoResource> {
+
+    private async links(): Promise<SystemInfoResource> {
         if (!this.systemInfo) {
-            const sysInfoObs = new Observable<SystemInfoResource>(observer => {
-                const params = new HttpParams().set('requestedVersion', '1');
-                const opts = addObserve({params});
-                this.http.get<SystemInfoResource>(this.baseURL, opts).subscribe(response => {
-                    if (response instanceof HttpResponse) {
-                        const httpResponse = response as HttpResponse<SystemInfoResource>;
-                        if (httpResponse.ok) {
-                            console.debug('links:ok', httpResponse);
-                            observer.next(httpResponse.body);
-                            observer.complete();
-                        } else if (response instanceof HttpErrorResponse) {
-                            const error = response as HttpErrorResponse;
-                            console.error('links:error', error);
-                            observer.error(error);
-                        } else {
-                            console.error('links:unknown', response);
-                            observer.error(response);
-                        }
+            const params = new HttpParams().set('requestedVersion', '1');
+            const opts = addObserve({params});
+            try {
+                const response = await asPromise(this.http.get<SystemInfoResource>(this.baseURL, opts));
+                if (response instanceof HttpResponse) {
+                    const httpResponse = response as HttpResponse<SystemInfoResource>;
+                    if (httpResponse.ok) {
+                        console.debug('links:ok', httpResponse);
+                        this.systemInfo = httpResponse.body;
+                    } else if (response instanceof HttpErrorResponse) {
+                        const error = response as HttpErrorResponse;
+                        console.error('links:error', error);
+                        throw error;
+                    } else {
+                        console.error('links:unknown', response);
+                        throw response;
                     }
-                }, error => {
-                    console.error('links:error', error);
-                    observer.error(error);
-                });
-            });
-            sysInfoObs.subscribe(result => {
-                console.debug('links:', result);
-                this.systemInfo = result;
-            }, error => {
-                console.error('links:error:', error);
+                }
+            } catch (error) {
                 if (error.status === 417) {
                     alert(error.error);
-                    document.location.reload(true);
+                    document.location.reload();
+                    return null;
                 }
-            });
-            return sysInfoObs;
+                console.error('links:error', error);
+                throw error;
+            }
+        }
+        return this.systemInfo
+    }
+
+    private processEvent<R>(response: HttpEvent<R>, link: Link): R {
+        if (response instanceof HttpResponse) {
+            const httpResponse = response as HttpResponse<R>;
+            if (httpResponse.ok) {
+                console.debug('process:ok', link, httpResponse);
+                return httpResponse.body;
+            } else {
+                console.debug('process:response:error:', link, httpResponse);
+                throw httpResponse;
+            }
         } else {
-            return new Observable<SystemInfoResource>(observer => {
-                observer.next(this.systemInfo);
-                observer.complete();
-            });
+            throw response
         }
     }
 
-    private processEvent<R>(request: Observable<HttpEvent<R>>, link: Link, observer: Subscriber<R>) {
-        request.subscribe(response => {
-            if (response instanceof HttpResponse) {
-                const httpResponse = response as HttpResponse<R>;
-                if (httpResponse.ok) {
-                    console.debug('process:ok', link, httpResponse);
-                    observer.next(httpResponse.body);
-                    observer.complete();
-                } else {
-                    console.debug('process:response:error:', link, httpResponse);
-                    observer.error(httpResponse);
-                }
-            }
-        }, error => {
-            console.error('process:error', link, error);
-            observer.error(error);
-        });
-    }
-
-    private process<R>(observer: Subscriber<R>, observable: Observable<R>) {
-        observable.subscribe(result => {
-            observer.next(result);
-            observer.complete();
-        }, error => {
-            observer.error(error);
-        });
-    }
-
-    getByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
+    async getByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Promise<R> {
         return this.getByLink<R>(makeLink(links, linkName), params, reqOpts);
     }
 
-    deleteByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Observable<R> {
+    async deleteByLinkName<R>(links: Links, linkName: string, params ?: any, reqOpts ?: any): Promise<R> {
         return this.deleteByLink<R>(makeLink(links, linkName), params, reqOpts);
     }
 
-    putByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    async putByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
         return this.putByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    postByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    async postByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
         return this.postByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    patchByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    async patchByLinkName<T, R>(links: Links, linkName: string, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
         return this.patchByLink<T, R>(makeLink(links, linkName), body, params, reqOpts);
     }
 
-    getByLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
+    async getByLink<R>(link: Link, params ?: any, reqOpts ?: any): Promise<R> {
         if (link == null) {
             console.log('link is null');
         }
-        return new Observable<R>(observer => {
-            const url = makeUrl(link, params);
-            const opts = addObserve(reqOpts);
-            console.debug('get:url', link, url, opts);
-            this.processEvent(this.http.get<R>(url, opts), link, observer);
-        });
+        const url = makeUrl(link, params);
+        const opts = addObserve(reqOpts);
+        console.debug('get:url', link, url, opts);
+        return this.processEvent(await asPromise(this.http.get<R>(url, opts)), link);
     }
 
-    get<R>(endpoint: string, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            this.links().subscribe(linksResponse => {
-                console.debug('links', linksResponse);
-                this.process(observer, this.getByLinkName<R>(linksResponse, endpoint, params, reqOpts));
-            }, error => {
-                observer.error(error);
-            });
-        });
+    async get<R>(endpoint: string, params ?: any, reqOpts ?: any): Promise<R> {
+        const linksResponse = await this.links();
+        console.debug('links', linksResponse);
+        return this.getByLinkName<R>(linksResponse, endpoint, params, reqOpts);
     }
 
-    postByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            const url = makeUrl(link, params);
-            const opts = addObserve(reqOpts);
-            console.debug('post:url', link, url, body, params, opts);
-            this.processEvent(this.http.post<R>(url, body, opts), link, observer);
-        });
+    async postByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
+        const url = makeUrl(link, params);
+        const opts = addObserve(reqOpts);
+        console.debug('post:url', link, url, body, params, opts);
+        return this.processEvent(await asPromise(this.http.post<R>(url, body, opts)), link);
     }
 
-    post<T, R>(endpoint: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
+    async post<T, R>(endpoint: string, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
         console.log('post', endpoint, body, params, reqOpts);
-        return new Observable<R>(observer => {
-            this.links().subscribe(linksResponse => {
-                console.debug('links', linksResponse);
-                this.process(observer, this.postByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
-            }, error => {
-                observer.error(error);
-            });
-        });
+        const linksResponse = await this.links();
+        console.debug('links', linksResponse);
+        return this.postByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts);
     }
 
-    putByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            const url = makeUrl(link, params);
-            const opts = addObserve(reqOpts);
-            console.debug(`put:url=${url}`, link, opts);
-            this.processEvent(this.http.put<R>(url, body, opts), link, observer);
-        });
+    async putByLink<T, R>(link: Link, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
+        const url = makeUrl(link, params);
+        const opts = addObserve(reqOpts);
+        console.debug(`put:url=${url}`, link, opts);
+        return this.processEvent(await asPromise(this.http.put<R>(url, body, opts)), link);
     }
 
-    put<T, R>(endpoint: string, body ?: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            this.links().subscribe(linksResponse => {
-                console.debug('links', linksResponse);
-                this.process(observer, this.putByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
-            }, error => {
-                observer.error(error);
-            });
-        });
+    async put<T, R>(endpoint: string, body ?: T, params ?: any, reqOpts ?: any): Promise<R> {
+        const linksResponse = await this.links();
+        console.debug('links', linksResponse);
+        return this.putByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts);
     }
 
-    deleteByLink<R>(link: Link, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            const url = makeUrl(link, params);
-            const opts = addObserve(reqOpts);
-            console.debug(`delete:url=${url}`, link, opts);
-            this.processEvent(this.http.delete<R>(url, opts), link, observer);
-        });
+    async deleteByLink<R>(link: Link, params ?: any, reqOpts ?: any): Promise<R> {
+        const url = makeUrl(link, params);
+        const opts = addObserve(reqOpts);
+        console.debug(`delete:url=${url}`, link, opts);
+        return this.processEvent(await asPromise(this.http.delete<R>(url, opts)), link);
+
     }
 
-    delete<R>(endpoint: string, params?: any, reqOpts?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            this.links().subscribe(linksResponse => {
-                console.debug('links', linksResponse);
-                this.process(observer, this.deleteByLinkName<R>(linksResponse, endpoint, params, reqOpts));
-            }, error => {
-                observer.error(error);
-            });
-        });
+    async delete<R>(endpoint: string, params?: any, reqOpts?: any): Promise<R> {
+        const linksResponse = await this.links();
+        console.debug('links', linksResponse);
+        return await this.deleteByLinkName<R>(linksResponse, endpoint, params, reqOpts);
     }
 
-    patchByLink<T, R>(link: Link, body: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            const url = makeUrl(link, params);
-            const opts = addObserve(reqOpts);
-            console.debug(`patch:url=${url}`, link, opts);
-            this.processEvent(this.http.patch<R>(url, body, opts), link, observer);
-        });
+    async patchByLink<T, R>(link: Link, body: T, params ?: any, reqOpts ?: any): Promise<R> {
+        const url = makeUrl(link, params);
+        const opts = addObserve(reqOpts);
+        console.debug(`patch:url=${url}`, link, opts);
+        return this.processEvent(await asPromise(this.http.patch<R>(url, body, opts)), link);
     }
 
-    patch<T, R>(endpoint: string, body: T, params ?: any, reqOpts ?: any): Observable<R> {
-        return new Observable<R>(observer => {
-            this.links().subscribe(linksResponse => {
-                console.debug('links', linksResponse);
-                this.process(observer, this.patchByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts));
-            }, error => {
-                observer.error(error);
-            });
-        });
+    async patch<T, R>(endpoint: string, body: T, params ?: any, reqOpts ?: any): Promise<R> {
+        const linksResponse = await this.links();
+        console.debug('links', linksResponse);
+        return this.patchByLinkName<T, R>(linksResponse, endpoint, body, params, reqOpts);
     }
 
-    request<T>(request: HttpRequest<T>): Observable<HttpEvent<any>> {
+    async request<T>(request: HttpRequest<T>): Promise<HttpEvent<any>> {
         console.debug('apiService:request:', request);
-        return this.http.request<T>(request);
+        return asPromise(this.http.request<T>(request));
     }
 
-    self<T extends Links>(links: T): Observable<T> {
+    async self<T extends Links>(links: T): Promise<T> {
         return this.getByLinkName<T>(links, 'self');
     }
 
-    selfPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+    async selfPage<T extends Paged>(page: T, request?: PageRequest): Promise<T> {
         return this.getByLinkName<T>(page, 'self', request);
     }
 
-    firstPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+    async firstPage<T extends Paged>(page: T, request?: PageRequest): Promise<T> {
         return this.getByLinkName<T>(page, 'first', request);
     }
 
-    lastPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+    async lastPage<T extends Paged>(page: T, request?: PageRequest): Promise<T> {
         return this.getByLinkName<T>(page, 'last', request);
     }
 
-    nextPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+    async nextPage<T extends Paged>(page: T, request?: PageRequest): Promise<T> {
         return this.getByLinkName<T>(page, 'next', request);
     }
 
-    prevPage<T extends Paged>(page: T, request?: PageRequest): Observable<T> {
+    async prevPage<T extends Paged>(page: T, request?: PageRequest): Promise<T> {
         return this.getByLinkName<T>(page, 'prev', request);
     }
 }
