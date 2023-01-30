@@ -34,3 +34,9 @@ npmInstall.outputs.dir('node_modules')
 task clean(type: Delete) {
     delete 'dist'
 }
+
+task buildDist(type: Zip, dependsOn: [ngBuild]) {
+    archiveFileName = "${project.name}.zip"
+    destinationDirectory = layout.buildDirectory.dir('libs')
+    from layout.projectDirectory.dir('dist')
+}
