@@ -1,6 +1,7 @@
 export const environment = {
     production: true,
-    apiUrl: new URL(window.location.href).origin + '/api'
+    apiUrl: new URL(window.location.href).origin + '/api',
+    wsUrl: new URL(window.location.href).origin.replace('https://', 'ws://').replace('http://', 'ws://') + '/ws'
 };
 
 

@@ -8,6 +8,7 @@ import {
 import {BehaviorSubject} from "rxjs";
 import {asPromise, convertErrorToString, Paged} from "app/service/api.service";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
+import {environment} from "../../environments/environment";
 
 @Component({
     selector: 'app-turnstile-list',
@@ -21,6 +22,7 @@ export class TurnstileListComponent implements OnInit {
     pageSize: number;
     errorMessage = new BehaviorSubject<string>(null);
     portrait: Promise<boolean>;
+
     constructor(private turnstileService: TurnstileApiService, breakpointObserver: BreakpointObserver) {
         this.totalPages = 0;
         switch (window.screen.orientation.type) {
@@ -36,20 +38,25 @@ export class TurnstileListComponent implements OnInit {
         }
         this.portrait = new Promise(resolve => {
             breakpointObserver.observe([
-                Breakpoints.HandsetLandscape,
-                Breakpoints.WebLandscape,
-                Breakpoints.TabletLandscape
+                Breakpoints.HandsetPortrait,
+                Breakpoints.WebPortrait,
+                Breakpoints.TabletPortrait
             ]).subscribe(result => {
                 if (result.matches) {
-                    resolve(false);
-                } else {
                     resolve(true);
+                } else {
+                    resolve(false);
                 }
             });
         });
+        turnstileService.messages.subscribe(async value => {
+            if(!environment.production) {
+                console.log("Updated" + JSON.stringify(value));
+            }
+            await this.updateTurnstile(value);
+        });
+
     }
-
-
 
 
     async ngOnInit() {
@@ -82,7 +89,7 @@ export class TurnstileListComponent implements OnInit {
 
     async updateTurnstile(resource: TurnstileResource) {
         console.debug('updateTurnstile', resource);
-        if(resource == null) {
+        if (resource == null) {
             return this.listTurnstiles();
         }
         let found = false;

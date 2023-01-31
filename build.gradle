@@ -11,7 +11,7 @@ node {
 task ngBuild(type: NpxTask) {
     dependsOn npmInstall
     command = 'ng'
-    args = ['build']
+    args = project.hasProperty('production') && project.ext.production.toBoolean() ? ['build', '-c', 'production'] : ['build']
     inputs.files('package.json', 'package-lock.json', 'angular.json', 'tsconfig.json')
     inputs.dir('src')
     inputs.dir(fileTree("node_modules").exclude(".cache"))
@@ -32,11 +32,24 @@ npmInstall.inputs.files('package.json')
 npmInstall.outputs.dir('node_modules')
 
 task clean(type: Delete) {
+    group = 'build'
     delete 'dist'
 }
 
 task buildDist(type: Zip, dependsOn: [ngBuild]) {
+    group = 'build'
     archiveFileName = "${project.name}.zip"
     destinationDirectory = layout.buildDirectory.dir('libs')
     from layout.projectDirectory.dir('dist')
+    include '*.css'
+    include '*.html'
+    include '*.js'
+}
+
+task assemble (dependsOn: [buildDist]) {
+    group = 'build'
+}
+
+task build(dependsOn: [assemble]) {
+    group = 'build'
 }
