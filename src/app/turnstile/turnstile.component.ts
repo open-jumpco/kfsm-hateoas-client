@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {TurnstileApiService, TurnstileResource} from "app/service/turnstile-api.service";
 import {BehaviorSubject} from "rxjs";
 import {convertErrorToString} from "app/service/api.service";
@@ -8,7 +8,7 @@ import {convertErrorToString} from "app/service/api.service";
     templateUrl: './turnstile.component.html',
     styleUrls: ['./turnstile.component.css']
 })
-export class TurnstileComponent implements OnInit {
+export class TurnstileComponent implements OnInit, AfterViewInit {
     @Input() turnstile: TurnstileResource
     @Output() resourceUpdated = new EventEmitter<TurnstileResource>();
 
@@ -20,19 +20,17 @@ export class TurnstileComponent implements OnInit {
     ngOnInit() {
     }
 
+    ngAfterViewInit(): void {
+        if(this.turnstile.message) {
+            this.setMessage(this.turnstile.message);
+        }
+    }
+
     async sendEvent(event: string) {
         try {
             this.turnstile = await this.turnstileService.sendEvent(this.turnstile, event);
             this.resourceUpdated.emit(this.turnstile);
-            if (this.turnstile.message) {
-                this.errorString.next(this.turnstile.message);
-                const self = this;
-                setTimeout(function () {
-                    self.errorString.next(" ")
-                }, 2000);
-            } else {
-                this.errorString.next(" ");
-            }
+            this.setMessage(this.turnstile.message);
         } catch (error) {
             console.error('sendEvent:', event, error);
             this.errorString.next(convertErrorToString(error));
@@ -42,7 +40,9 @@ export class TurnstileComponent implements OnInit {
             }, 5000);
         }
     }
-
+    setMessage(message: string) {
+        this.errorString.next(message ? message : " ");
+    }
     async delete() {
         await this.turnstileService.delete(this.turnstile);
         this.resourceUpdated.emit(null);

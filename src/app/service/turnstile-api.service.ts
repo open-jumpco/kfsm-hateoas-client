@@ -9,12 +9,13 @@ enum TurnstileState {
     LOCKED = 'LOCKED',
     UNLOCKED = 'UNLOCKED'
 }
-
-export interface TurnstileResource extends Links {
+export interface Turnstile {
     id: number;
     locked: boolean;
     message?: string;
     currentState: TurnstileState
+}
+export interface TurnstileResource extends Turnstile, Links {
 }
 
 export interface TurnstileResources {

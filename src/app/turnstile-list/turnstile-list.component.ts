@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, QueryList, ViewChildren} from '@angular/core';
 import {
     TurnstileApiService,
     TurnstileResource,
@@ -9,6 +9,7 @@ import {BehaviorSubject} from "rxjs";
 import {asPromise, convertErrorToString, Paged} from "app/service/api.service";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {environment} from "../../environments/environment";
+import {TurnstileComponent} from "app/turnstile/turnstile.component";
 
 @Component({
     selector: 'app-turnstile-list',
@@ -16,6 +17,7 @@ import {environment} from "../../environments/environment";
     styleUrls: ['./turnstile-list.component.css']
 })
 export class TurnstileListComponent implements OnInit {
+    @ViewChildren(TurnstileComponent) childTurnstiles: QueryList<TurnstileComponent>;
     turnstiles = new BehaviorSubject<TurnstileResources>(null);
     turnstilePage: TurnstileResourcePage;
     totalPages: number;
@@ -53,9 +55,17 @@ export class TurnstileListComponent implements OnInit {
             if(!environment.production) {
                 console.log("Updated" + JSON.stringify(value));
             }
-            await this.updateTurnstile(value);
+            let current = this.turnstilePage._embedded.turnstiles.find(v => v.id == value.id)
+            if(current) {
+                if (current.locked != value.locked || current.currentState != value.currentState) {
+                    // load if the links are changing
+                    current = await this.turnstileService.get(current);
+                } else {
+                    current.message = value.message
+                }
+            }
+            await this.updateTurnstile(current);
         });
-
     }
 
 
@@ -93,17 +103,19 @@ export class TurnstileListComponent implements OnInit {
             return this.listTurnstiles();
         }
         let found = false;
-        for (const item of this.turnstiles.getValue().turnstiles) {
-            if (item.id === resource.id) {
-                item.currentState = resource.currentState;
-                item.locked = resource.locked;
-                item.message = resource.message;
-                item._links = resource._links;
-                found = true;
+        const child = this.childTurnstiles.find(item => item.turnstile.id === resource.id);
+        if(child) {
+            child.turnstile = resource;
+            child.setMessage(resource.message)
+        } else {
+            await this.listTurnstiles();
+            const item = this.childTurnstiles.find(item => item.turnstile.id === resource.id);
+            if(item) {
+                item.turnstile = resource;
+                if(resource.message && resource.message.length > 0) {
+                    item.setMessage(resource.message)
+                }
             }
-        }
-        if (!found) {
-            return this.listTurnstiles();
         }
     }
 
