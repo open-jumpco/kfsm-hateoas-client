@@ -55,7 +55,7 @@ export class TurnstileListComponent implements OnInit {
         });
         turnstileService.messages.subscribe(async value => {
             if (!environment.production) {
-                console.log("Updated" + JSON.stringify(value));
+                console.log("Updated", value);
             }
             let current = this.turnstilePage._embedded.turnstiles.find(v => v.id == value.id)
             if (current) {

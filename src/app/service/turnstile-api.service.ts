@@ -38,11 +38,11 @@ export class TurnstileApiService {
             map(
                 (response: MessageEvent): TurnstileResource => {
                     if(!environment.production) {
-                        console.log("WebSocket:response:" + response);
+                        console.log("WebSocket:response:", response);
                     }
                     const data = JSON.parse(response.data);
                     if(!environment.production) {
-                        console.log("WebSocket:data:" + response.data);
+                        console.log("WebSocket:data:" ,response.data);
                     }
                     return data;
                 }

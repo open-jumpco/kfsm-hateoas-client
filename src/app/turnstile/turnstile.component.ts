@@ -21,9 +21,7 @@ export class TurnstileComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        if(this.turnstile.message) {
-            this.setMessage(this.turnstile.message);
-        }
+        this.setMessage(this.turnstile?.message);
     }
 
     async sendEvent(event: string) {
