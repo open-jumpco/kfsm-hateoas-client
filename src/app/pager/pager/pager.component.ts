@@ -33,10 +33,11 @@ export class PagerComponent implements OnInit {
         this.pageUpdated.emit(this.pagedResource);
     }
 
-    private getPageable(): PageRequest {
+    getPageable(): PageRequest {
         return {
             size: this.size,
-            sort: this.sort
+            sort: this.sort,
+            page: this.pagedResource?.page?.number
         };
     }
 

@@ -1,4 +1,4 @@
-import {Component, OnInit, QueryList, ViewChildren} from '@angular/core';
+import {Component, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {
     TurnstileApiService,
     TurnstileResource,
@@ -10,6 +10,7 @@ import {asPromise, convertErrorToString, Paged} from "app/service/api.service";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {environment} from "../../environments/environment";
 import {TurnstileComponent} from "app/turnstile/turnstile.component";
+import {PagerComponent} from "app/pager/pager/pager.component";
 
 @Component({
     selector: 'app-turnstile-list',
@@ -17,6 +18,7 @@ import {TurnstileComponent} from "app/turnstile/turnstile.component";
     styleUrls: ['./turnstile-list.component.css']
 })
 export class TurnstileListComponent implements OnInit {
+    @ViewChild(PagerComponent) pager: PagerComponent;
     @ViewChildren(TurnstileComponent) childTurnstiles: QueryList<TurnstileComponent>;
     turnstiles = new BehaviorSubject<TurnstileResources>(null);
     turnstilePage: TurnstileResourcePage;
@@ -52,11 +54,11 @@ export class TurnstileListComponent implements OnInit {
             });
         });
         turnstileService.messages.subscribe(async value => {
-            if(!environment.production) {
+            if (!environment.production) {
                 console.log("Updated" + JSON.stringify(value));
             }
             let current = this.turnstilePage._embedded.turnstiles.find(v => v.id == value.id)
-            if(current) {
+            if (current) {
                 if (current.locked != value.locked || current.currentState != value.currentState) {
                     // load if the links are changing
                     current = await this.turnstileService.get(current);
@@ -76,7 +78,10 @@ export class TurnstileListComponent implements OnInit {
     async listTurnstiles() {
         try {
             this.errorMessage.next(null);
-            this.turnstilePage = await this.turnstileService.list({size: this.pageSize});
+            const pageRequest = this.pager ?
+                this.pager.getPageable() :
+                {size: this.pageSize};
+            this.turnstilePage = await this.turnstileService.list(pageRequest);
             this.totalPages = this.turnstilePage?.page?.totalPages;
             this.turnstiles.next(this.turnstilePage?._embedded);
         } catch (error) {
@@ -104,15 +109,15 @@ export class TurnstileListComponent implements OnInit {
         }
         let found = false;
         const child = this.childTurnstiles.find(item => item.turnstile.id === resource.id);
-        if(child) {
+        if (child) {
             child.turnstile = resource;
             child.setMessage(resource.message)
         } else {
             await this.listTurnstiles();
             const item = this.childTurnstiles.find(item => item.turnstile.id === resource.id);
-            if(item) {
+            if (item) {
                 item.turnstile = resource;
-                if(resource.message && resource.message.length > 0) {
+                if (resource.message && resource.message.length > 0) {
                     item.setMessage(resource.message)
                 }
             }
