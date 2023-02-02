@@ -1,13 +1,15 @@
-<mat-card *ngIf="turnstile" class="mat-accent">
+<mat-card *ngIf="turnstile" class="mat-accent" style="min-width: 10em">
     <mat-card-header style="display: flex; justify-content: center; align-items: center;">
         <mat-card-title aria-label="Id">Turnstile {{turnstile.id}}</mat-card-title>
         <mat-card-subtitle aria-label="State">State: {{turnstile.currentState}}</mat-card-subtitle>
     </mat-card-header>
-    <mat-card-content style="display: flex; justify-content: center; align-items: center;">
+    <mat-card-content style="display: flex; justify-content: center; align-items: center; min-height: 3ex">
         <mat-icon fontIcon="hourglass_empty" *ngIf="turnstile.message?.toLowerCase()?.includes('timeout')"></mat-icon>
         <mat-icon fontIcon="monetization_on" *ngIf="turnstile.message?.toLowerCase()?.includes('coin')"></mat-icon>
+        <mat-icon fontIcon="lock" *ngIf="turnstile.message?.toLowerCase()?.includes('locked')"></mat-icon>
+        <mat-icon fontIcon="lock_open" *ngIf="turnstile.message?.toLowerCase()?.includes('unlock')"></mat-icon>
     </mat-card-content>
-    <mat-card-content [className]="turnstile.message ? 'mat-accent' : 'mat-warn'"
+    <mat-card-content [className]="turnstile.message ? 'mat-accent' : 'mat-warn'" style="min-height: 3ex"
                       aria-label="Message">
         <p style="text-align: center">&nbsp;{{errorString | async}}</p>
     </mat-card-content>
