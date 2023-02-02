@@ -1,4 +1,4 @@
-<app-turnstile-list></app-turnstile-list>
+<app-turnstile-list *ngIf="fontSize | async as fs" [ngStyle]="{'font-size': fs}"></app-turnstile-list>
 
 <div class="container">
   <router-outlet></router-outlet>

@@ -11,6 +11,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {environment} from "../../environments/environment";
 import {TurnstileComponent} from "app/turnstile/turnstile.component";
 import {PagerComponent} from "app/pager/pager/pager.component";
+import {determineFontSize} from "app/app.component";
 
 @Component({
     selector: 'app-turnstile-list',
@@ -25,35 +26,34 @@ export class TurnstileListComponent implements OnInit {
     totalPages: number;
     pageSize: number;
     errorMessage = new BehaviorSubject<string>(null);
-    portrait: Promise<boolean>;
+    breakpoint: Promise<boolean>;
+    fontSize: string = "8pt";
+    colspan: number = 3;
 
     constructor(private turnstileService: TurnstileApiService, breakpointObserver: BreakpointObserver) {
         this.totalPages = 0;
-        switch (window.screen.orientation.type) {
-            case "portrait-primary":
-            case "portrait-secondary":
-                this.pageSize = 6;
-                break;
-            case "landscape-primary":
-            case "landscape-secondary":
-            default:
-                this.pageSize = 10;
-                break;
-        }
-        this.portrait = new Promise(resolve => {
+        this.breakpoint = new Promise<boolean>(resolve => {
             breakpointObserver.observe([
-                Breakpoints.HandsetPortrait,
-                Breakpoints.WebPortrait,
-                Breakpoints.TabletPortrait
-            ]).subscribe(result => {
-                if (result.matches) {
-                    resolve(true);
+                Breakpoints.Small,
+                Breakpoints.XSmall,
+                Breakpoints.Medium,
+                Breakpoints.Large,
+                Breakpoints.XLarge
+            ]).subscribe(value => {
+                const portrait = breakpointObserver.isMatched([Breakpoints.WebPortrait, Breakpoints.HandsetPortrait, Breakpoints.TabletPortrait]);
+                if (portrait) {
+                    this.colspan = 4;
+                    this.pageSize = 9;
                 } else {
-                    resolve(false);
+                    this.colspan = 2;
+                    this.pageSize = 12;
                 }
+                console.log("breakpointObserver:", value);
+                this.fontSize = determineFontSize(breakpointObserver);
+                resolve(true);
             });
         });
-        turnstileService.messages.subscribe(async value => {
+        this.turnstileService.messages.subscribe(async value => {
             if (!environment.production) {
                 console.log("Updated", value);
             }
